@@ -11,31 +11,36 @@ export default function Home() {
   const [rightContent, setRightContent] = useState('')
   const [copied, setCopied] = useState(false)
   const [isFlipped, setIsFlipped] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const generateNDEL = () => {
-    // For now, just a simple example transformation
-    // In production, this would call your NDEL parser API
-    const sampleOutput = `@domain("general")
-
-where entity meets "criteria from input"
-  and conditions are "satisfied"
-  and requirements show "alignment"`
+  const generateNDEL = async () => {
+    setIsLoading(true)
     
-    // Always populate the left box
-    setLeftContent(sampleOutput)
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: isFlipped ? rightContent : leftContent })
+      })
+      
+      const data = await response.json()
+      setLeftContent(data.output)
+    } catch (error) {
+      // Basic fallback conversion
+      const input = isFlipped ? rightContent : leftContent
+      const output = `@domain("general")\n\nwhere criteria matches "${input.slice(0, 50)}..."`
+      setLeftContent(output)
+    }
+    
+    setIsLoading(false)
   }
 
   const runQuery = () => {
-    // This would execute the NDEL query
-    // For now, just a placeholder
-    console.log('Running query...', isFlipped ? rightContent : leftContent)
     alert('Run functionality coming soon!')
   }
 
   const swapBoxes = () => {
-    const temp = leftContent
-    setLeftContent(rightContent)
-    setRightContent(temp)
+    // Just swap the labels, not the content
     setIsFlipped(!isFlipped)
   }
 
@@ -82,29 +87,54 @@ where entity meets "criteria from input"
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="flex justify-center mb-6">
+            <button
+              onClick={generateNDEL}
+              disabled={isLoading}
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl transform hover:scale-105 transition-all disabled:opacity-50"
+            >
+              {isLoading ? 'Generating...' : 'Generate'}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-xl shadow-lg overflow-hidden"
+              className="flex-1 bg-white rounded-xl shadow-lg overflow-hidden"
             >
-              <div className="bg-gray-50 px-4 py-3 border-b">
+              <div className="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
                 <h3 className="font-semibold text-gray-700">
                   {isFlipped ? 'NDEL Expression' : 'Natural Language'}
                 </h3>
+                <button
+                  onClick={runQuery}
+                  className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors"
+                >
+                  Run
+                </button>
               </div>
               <textarea
                 value={leftContent}
                 onChange={(e) => setLeftContent(e.target.value)}
                 placeholder=""
                 className="w-full p-4 h-96 resize-none focus:outline-none font-mono text-sm"
+                spellCheck={false}
               />
             </motion.div>
+
+            <button
+              onClick={swapBoxes}
+              className="px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold text-xl hover:bg-gray-50 transform hover:scale-105 transition-all"
+              title="Swap boxes"
+            >
+              ⇄
+            </button>
 
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-xl shadow-lg overflow-hidden"
+              className="flex-1 bg-white rounded-xl shadow-lg overflow-hidden"
             >
               <div className="bg-gray-50 px-4 py-3 border-b flex justify-between items-center">
                 <h3 className="font-semibold text-gray-700">
@@ -120,42 +150,25 @@ where entity meets "criteria from input"
               <div className="h-96 overflow-auto">
                 <Editor
                   height="100%"
-                  defaultLanguage="javascript"
+                  defaultLanguage="text"
                   value={rightContent}
                   onChange={(value) => setRightContent(value || '')}
                   theme="vs-light"
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,
-                    padding: { top: 16, bottom: 16 }
+                    padding: { top: 16, bottom: 16 },
+                    wordWrap: 'on',
+                    wrappingIndent: 'none',
+                    scrollBeyondLastLine: false,
+                    renderLineHighlight: 'none',
+                    occurrencesHighlight: false,
+                    selectionHighlight: false,
+                    codeLens: false
                   }}
                 />
               </div>
             </motion.div>
-          </div>
-
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={generateNDEL}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl transform hover:scale-105 transition-all"
-            >
-              Generate
-            </button>
-            
-            <button
-              onClick={swapBoxes}
-              className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold text-lg hover:bg-gray-50 transform hover:scale-105 transition-all"
-              title="Swap boxes"
-            >
-              ⇄
-            </button>
-
-            <button
-              onClick={runQuery}
-              className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl transform hover:scale-105 transition-all"
-            >
-              Run
-            </button>
           </div>
         </div>
       </section>
