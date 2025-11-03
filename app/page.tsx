@@ -162,9 +162,8 @@ export default function Home() {
                     wrappingIndent: 'none',
                     scrollBeyondLastLine: false,
                     renderLineHighlight: 'none',
-                    occurrencesHighlight: false,
-                    selectionHighlight: false,
-                    codeLens: false
+                    occurrencesHighlight: 'off',
+                    selectionHighlight: false
                   }}
                 />
               </div>
