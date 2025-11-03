@@ -15,28 +15,44 @@ export default function Home() {
 
   const generateNDEL = async () => {
     setIsLoading(true)
-    
+
+    // Generate random example input for the left box
+    const examples = [
+      "Find me a young soccer player under 23 who plays as a striker, has scored more than 10 goals this season, and shows high potential for development.",
+      "I need customers who made purchases in the last 3 months but not recently, spend above average, and might be at risk of churning.",
+      "Looking for a senior Python developer with machine learning experience, good communication skills, able to mentor juniors, and in a compatible timezone.",
+      "Find stocks that have increased in value over the past quarter, have low volatility, and are in the technology sector.",
+      "I want to find articles published in the last week about artificial intelligence that have high engagement and are from credible sources.",
+      "Show me properties for sale under $500k, with at least 3 bedrooms, good school ratings, and within 30 minutes of downtown."
+    ]
+
+    const randomExample = examples[Math.floor(Math.random() * examples.length)]
+    setLeftContent(randomExample)
+
+    setIsLoading(false)
+  }
+
+  const runQuery = async () => {
+    if (!leftContent.trim()) return
+
+    setIsLoading(true)
+
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: isFlipped ? rightContent : leftContent })
+        body: JSON.stringify({ input: leftContent, isFlipped })
       })
-      
+
       const data = await response.json()
-      setLeftContent(data.output)
+      setRightContent(data.output)
     } catch (error) {
       // Basic fallback conversion
-      const input = isFlipped ? rightContent : leftContent
-      const output = `@domain("general")\n\nwhere criteria matches "${input.slice(0, 50)}..."`
-      setLeftContent(output)
+      const output = `@domain("general")\n\nwhere criteria matches "${leftContent.slice(0, 50)}..."`
+      setRightContent(output)
     }
-    
-    setIsLoading(false)
-  }
 
-  const runQuery = () => {
-    alert('Run functionality coming soon!')
+    setIsLoading(false)
   }
 
   const swapBoxes = () => {
@@ -90,7 +106,7 @@ export default function Home() {
           <div className="flex justify-center mb-6">
             <button
               onClick={generateNDEL}
-              disabled={isLoading || !leftContent.trim()}
+              disabled={isLoading}
               className="group relative px-10 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white rounded-2xl font-bold text-lg shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md overflow-hidden"
             >
               <span className="relative z-10 flex items-center gap-2">
@@ -104,8 +120,8 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    Generate NDEL
-                    <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
+                    Generate Example
+                    <span className="text-2xl group-hover:translate-x-1 transition-transform">✨</span>
                   </>
                 )}
               </span>
