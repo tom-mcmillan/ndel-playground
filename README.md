@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NDEL Playground
+
+A simple web playground for the [NDEL library](https://github.com/tom-mcmillan/ndel). Paste Python or SQL pipeline code and see a rendered NDEL description (datasets, transformations, features, models, metrics). All analysis is static—no code is executed.
+
+## Architecture
+
+- **Frontend (Next.js)**: single page with code input and NDEL output.
+- **Backend (Python + Flask)**: `/describe` endpoint calling NDEL APIs (`describe_python_source`, `describe_sql_source`).
 
 ## Getting Started
 
-First, run the development server:
+### 1) Install Python dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pip install -r requirements.txt
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This pulls Flask, Flask-CORS, and the `ndel` library from GitHub.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2) Start the Python backend
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+python api_server.py
+```
 
-## Learn More
+Runs at `http://localhost:5000/describe` and expects JSON:
 
-To learn more about Next.js, take a look at the following resources:
+```json
+{ "source": "...python or sql...", "language": "python" }
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3) Start the Next.js frontend
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3000](http://localhost:3000) and paste code to see NDEL output.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## How It Works
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Paste Python or SQL pipeline code.
+2. Choose the language (Python/SQL) and click **Describe**.
+3. The frontend calls `/api/generate`, which proxies to Flask `/describe`.
+4. Flask uses NDEL to render a descriptive DSL.
+5. Output shows datasets, transformations (with lineage), features, models, and metrics.
+
+## Environment Variables
+
+Create `.env.local` to point the frontend to your backend:
+
+```bash
+PYTHON_API_URL=http://localhost:5000
+```
+
+## Development Pointers
+
+- Frontend: `app/page.tsx`
+- API proxy: `app/api/generate/route.ts`
+- Backend: `api_server.py`
+
+Refer to the main NDEL repo for full docs, config, lineage, and diff/validation helpers.
